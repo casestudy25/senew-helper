@@ -1,80 +1,67 @@
-import styles from "./App.module.css";
 import {useState} from "react";
+import SenewCalc from "./SenewCalc";
+import SoogiBuild from "./SoogiBuild";
+import EthPrice from "./EthPrice";
+import EthConverter from "./EthConverter";
+import styles from "./Common.module.css";
+
+const MODE_SENEW = "새뉴 계산기";
+const MODE_SOOGI = "수기 메이커";
+const MODE_ETH = "이더리움 시세 조회";
+const MODE_CONVERTER = "이더리움 변환기";
 
 function App() {
-    const [textToParse, setTextToParse] = useState("");
-    const [originalTotal, setOriginalTotal] = useState(0);
-    const [discountedTotal, setDiscountedTotal] = useState(0);
-    const [isParsed, setIsParsed] = useState(false);
-    const [resultTrs, setResultTrs] = useState([]);
-
-    const onChange = (event) => {
-        const pastedText = event.target.value;
-        setTextToParse(pastedText);
-    }
+    const [mode, setMode] = useState("");
 
     const onClick = (event) => {
-        event.preventDefault();
-
-        if (textToParse === "") {
-            alert("입력된 텍스트 없음");
-            return;
-        } else if (!textToParse.startsWith("<html>") || !textToParse.endsWith("</html>")) {
-            alert("양식 재확인");
-            return;
-        }
-
-        const parser = new DOMParser();
-        const allHtml = parser.parseFromString(textToParse, 'text/html');
-        const trs = allHtml.querySelectorAll("table#pu_main td.tb_2");
-
-        const tempTrs = [];
-        let tempOriginalTotal = 0;
-        let tempDiscountTotal = 0;
-
-        trs.forEach(tr => {
-            const tempPriceStr = tr.querySelector("table tr td:last-child").innerHTML
-                .replace(",", "")
-                .replace("원", "");
-            const tempPrice = parseInt(tempPriceStr);
-
-            tempOriginalTotal += tempPrice;
-            tempDiscountTotal += isKinto(tr.innerText) ? tempPrice * .9 : tempPrice;  // 킨토 제품만 10% 할인
-            tempTrs.push(tr);
-        });
-
-        setOriginalTotal(tempOriginalTotal);
-        setDiscountedTotal(tempDiscountTotal);
-        setResultTrs(tempTrs);
-        setIsParsed(true);
-    };
+        const selected = event.target.innerText;
+        setMode(selected);
+    }
 
     return (
-        <div>
-            <h1>Senew Paste</h1>
-            <textarea
-                value={textToParse}
-                onChange={onChange}
-                placeholder={"HTML 전체 붙여넣기"}
-                className={styles.paste}
-            />
-            <br/>
-            <button onClick={onClick}>변환</button>
-            <ol>
-                {!isParsed ? null : resultTrs.map((item) =>
-                    <li key={item.innerText}>
-                        {item.querySelector("b").innerText} / <strong className={isKinto(item.innerText) ? null : styles.not_kinto}>{item.querySelector("table tr td:last-child").innerText} </strong>
-                    </li>
-                )}
-            </ol>
-            <h3>{`Original price ${originalTotal}`}</h3>
-            <h3>{`Discounted price ${discountedTotal}`}</h3>
+        <div className={styles.container}>
+            <div className={styles.sidebar}>
+                <header className={styles.header}>
+                    <h1 className={styles.title}>개발자 도구모음</h1>
+                    <div className={styles.button_container}>
+                        <button 
+                            className={`${styles.main_btn} ${mode === MODE_SENEW ? styles.active : ''}`} 
+                            onClick={onClick}
+                        >
+                            {MODE_SENEW}
+                        </button>
+                        <button 
+                            className={`${styles.main_btn} ${mode === MODE_SOOGI ? styles.active : ''}`} 
+                            onClick={onClick}
+                        >
+                            {MODE_SOOGI}
+                        </button>
+                        <button 
+                            className={`${styles.main_btn} ${mode === MODE_ETH ? styles.active : ''}`} 
+                            onClick={onClick}
+                        >
+                            {MODE_ETH}
+                        </button>
+                        <button 
+                            className={`${styles.main_btn} ${mode === MODE_CONVERTER ? styles.active : ''}`} 
+                            onClick={onClick}
+                        >
+                            {MODE_CONVERTER}
+                        </button>
+                    </div>
+                </header>
+            </div>
+            
+            <main className={styles.main_content}>
+                {mode && <div className={styles.content}>
+                    {mode === MODE_SENEW && <SenewCalc/>}
+                    {mode === MODE_SOOGI && <SoogiBuild/>}
+                    {mode === MODE_ETH && <EthPrice/>}
+                    {mode === MODE_CONVERTER && <EthConverter/>}
+                </div>}
+            </main>
         </div>
     );
-}
-
-function isKinto(productName) {
-    return productName.includes("킨토");
 }
 
 export default App;
